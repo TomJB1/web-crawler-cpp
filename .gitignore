@@ -1,0 +1,9 @@
+CMakeCache.txt
+CMakeFiles/*
+CPackConfig.cmake
+CPackSourceConfig.cmake
+Crawler
+Makefile
+_deps/
+cmake_install.cmake
+libpsl_src-install/
