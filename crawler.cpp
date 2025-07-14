@@ -3,6 +3,7 @@
 #include <array>
 #include <algorithm>
 #include <stdexcept>
+#include <regex>
 #include <cpr/cpr.h>
 
 class bad_link : public std::exception {
@@ -18,28 +19,44 @@ public:
 };
 
 class Url {
-    public:
+    private:
         std::string protocol;
         std::string domain;
         std::string path;
+        std::string link;
 
+        void update_link() {
+            link = protocol + std::string("://") + domain + path;
+        }
+    public:
+        
         Url(std::string url) {
-            // TODO automattically split url
+            std::regex r("^(.+)://(.+)(/.+)");
+            std::smatch match;
+            std::regex_search(url, match, r);
+            protocol = match.str(1);
+            domain = match.str(2);
+            path = match.str(3);
+            update_link();
         }
 
-        std::string link() {
-            return protocol + std::string("://") + domain + path;
+        std::string get_link() {
+            return link;
+        }
+
+        std::string get_domain() {
+            return domain;
         }
 };
 
-std::string get_page(std::string url) {
+std::string get_page(Url url) {
 
     static std::string USER_AGENT = "BrandisBot";
     static std::string EXTENDED_USER_AGENT = USER_AGENT + " (+https://tombrandis.uk)";
 
     static std::array<std::string, 4> ALLOWED_CONTENT_TYPE = {"text/html", "application/xhtml+xml", "text/plain", "text/markdown"};
 
-    cpr::Response r = cpr::Get(cpr::Url{url}, cpr::Header{{"User-agent", EXTENDED_USER_AGENT}});
+    cpr::Response r = cpr::Get(cpr::Url{url.get_link()}, cpr::Header{{"User-agent", EXTENDED_USER_AGENT}});
 
     if(r.status_code != 200) {
         std::cout << ("failed - status code:" + r.status_code);
@@ -52,18 +69,11 @@ std::string get_page(std::string url) {
 }
 
 int main() {
-    Url test("https://tombrandis.uk/tes2t.txt");
-    test.protocol = "https";
-    test.domain = "tombrandis.uk";
-    test.path = "/tes2t.txt";
-
-    std::cout << test.link();
-
+    Url page("https://tombrandis.uk/tes2t.txt");
     try {
-        std::cout << get_page("https://tombrandis.uk/tes2t.txt");
+        std::cout << get_page(page);
     }
     catch (bad_link& e) {
         std::cout << e.what();
-    }
-    
+    }  
 }
