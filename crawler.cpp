@@ -4,7 +4,11 @@
 #include <algorithm>
 #include <stdexcept>
 #include <regex>
+#include <fstream>
 #include <cpr/cpr.h>
+#include <sqlite3.h>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
 
 class bad_link : public std::exception {
 private:
@@ -48,6 +52,23 @@ class Url {
             return domain;
         }
 };
+
+void domain_trackers(std::string domain) {
+    // this requires The Markup's Blacklight to be installed and functional https://github.com/the-markup/blacklight-query
+    static std::string BLACKLIGHT_QUERY_PATH = "/home/tomjb/repos/blacklight-query/";
+    std::string path_to_inspection = BLACKLIGHT_QUERY_PATH + "outputs/" + domain + "/inspection.json";
+    
+    std::ifstream inspection(path_to_inspection.c_str());
+    if(!inspection.good()) {
+        std::system(("echo https://" + domain + " | " + BLACKLIGHT_QUERY_PATH + "/blacklight-query > /dev/null").c_str());
+        inspection.open(path_to_inspection.c_str());
+    }
+
+    json inspection_json = json::parse(inspection);
+    std::cout << inspection_json["title"];
+    
+    inspection.close();
+}
 
 std::string get_page(Url url) {
 
