@@ -10,6 +10,15 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 
+// public vars
+static std::string BLACKLIGHT_QUERY_PATH = "/home/tomjb/repos/blacklight-query/";
+
+static std::string USER_AGENT = "BrandisBot";
+static std::string EXTENDED_USER_AGENT = USER_AGENT + " (+https://tombrandis.uk)";
+
+static std::array<std::string, 4> ALLOWED_CONTENT_TYPE = {"text/html", "application/xhtml+xml", "text/plain", "text/markdown"};
+
+
 class bad_link : public std::exception {
 private:
     std::string message;
@@ -55,7 +64,6 @@ class Url {
 
 void domain_trackers(std::string domain) {
     // this requires The Markup's Blacklight to be installed and functional https://github.com/the-markup/blacklight-query
-    static std::string BLACKLIGHT_QUERY_PATH = "/home/tomjb/repos/blacklight-query/";
     std::string path_to_inspection = BLACKLIGHT_QUERY_PATH + "outputs/" + domain + "/inspection.json";
     
     std::ifstream inspection(path_to_inspection.c_str());
@@ -71,12 +79,6 @@ void domain_trackers(std::string domain) {
 }
 
 std::string get_page(Url url) {
-
-    static std::string USER_AGENT = "BrandisBot";
-    static std::string EXTENDED_USER_AGENT = USER_AGENT + " (+https://tombrandis.uk)";
-
-    static std::array<std::string, 4> ALLOWED_CONTENT_TYPE = {"text/html", "application/xhtml+xml", "text/plain", "text/markdown"};
-
     cpr::Response r = cpr::Get(cpr::Url{url.get_link()}, cpr::Header{{"User-agent", EXTENDED_USER_AGENT}});
 
     if(r.status_code != 200) {
@@ -96,5 +98,6 @@ int main() {
     }
     catch (bad_link& e) {
         std::cout << e.what();
-    }  
+    }
+    return 0;
 }
